@@ -1,3 +1,4 @@
+#this is slow and dumb
 import json
 import sys
 from pprint import pprint
