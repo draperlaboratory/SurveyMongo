@@ -1,4 +1,4 @@
-#this is slow and dumb
+#this is slow and dumb, probably should be deleted from repo
 import json
 import sys
 from pprint import pprint
