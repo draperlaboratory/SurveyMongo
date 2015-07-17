@@ -5,8 +5,6 @@ import sys
 import requests
 import json
 from sm_functions import get_survey_list, get_respondent_list, get_responses, get_survey_details
-import time
-import pprint
 
 def run(name=""):
     with open("private_key.txt", "r") as f:

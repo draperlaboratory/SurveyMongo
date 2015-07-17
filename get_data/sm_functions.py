@@ -15,11 +15,9 @@ def get_survey_list(client, survey_name=""):
     
     data = '{}'
     if survey_name != "":
-        print "name =", survey_name
         survey_post_data = {}
         survey_post_data["title"] = survey_name
         survey_post_data["fields"] = ["title"] 
-        print json.dumps(survey_post_data)
         survey_response = client.post(survey_uri, data=json.dumps(survey_post_data), verify=True)
     else:
         survey_response = client.post(survey_uri, '{"fields":["title"]}',  verify=True)
