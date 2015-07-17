@@ -1,0 +1,13 @@
+*.json
+*.fixed
+get_data/README.txt
+get_data/temp.txt
+get_data/temp2.txt
+get_data/test.bat
+sql/oldseth.py
+sql/seth.py
+survey.db
+mongotest.py
+README.txt
+*.pyc
+get_data/private_key.txt
