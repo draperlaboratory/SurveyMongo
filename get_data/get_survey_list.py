@@ -14,7 +14,6 @@ with open("private_key.txt", "r") as f:
     survey_list = get_survey_list(client)
 
     if sys.version_info[0] > 2:
-        #print(survey_list) # only works correctly in python 3
         pprint.pprint(survey_list) # only works correctly in python 3
     else: 
         print json.dumps(survey_list, indent=2, sort_keys=True) #only works in python 2
