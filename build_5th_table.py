@@ -1,8 +1,8 @@
 '''
 respondent_id_list is numerous structures of respondent info in small arrays for no apparent reason 
-respondens are answers to survey questions
+respondents are answers to survey questions
 survey_details is the details about the survey
-survey_list is a redundent list of survey names
+survey_list is a redundant list of survey names
 
 5th table is all survey questions indexed by Session ID hash
 
@@ -48,16 +48,7 @@ for respondent_id in respondents:
             for question in datum["questions"]:
                 # this is an array of answers and a question_id
                 questions_from_responses.append(question)
-                '''
-                #print "len =", len(question["answers"])
-                if len(question["answers"]) != 1: 
-                    print "***WARNING, database format has change, data may be dropped"
-                    print "len =", len(question["answers"])
-                    for entry in question["answers"]:
-                        json.dump(entry, sys.stdout)
-                        print
-                answers.append( {"question_id": question["question_id"], "answers": question["answers"][0]}) #hard coded 0, OI am ASSUMING only one entry in array.. bad?
-                '''
+
     #if debug == False: json.dump(questions, sys.stdout);
     #if debug == False: pprint.pprint(questions) # {u'row': u'7718418739', u'text': u'justinbeiber'}],
     '''
@@ -107,22 +98,20 @@ for respondent_id in respondents:
     for document in cursor: #there can be only one, due to unique key
         user_data = document
 
-        
     '''
     entry in questions_from_responses:
     [{u'answers': [{u'row': u'7718418737', u'text': u'Zulaydonado'},
                {u'row': u'7718418738', u'text': u'246'},
                {u'row': u'7718418739', u'text': u'justinbeiber'}],
     '''        
-        
-        
-        
+
     #After reading that structure we need to reset cursor and read the answer structure
     #goal: create 
     #   {subject_ID, [{question_id, heading, {answers}}, ... ]}
     for question in questions_from_responses: #for every question in the list of questions from responses.json for this respondent id
 
         '''
+        #this may or may not be useful
         skip = False
         for k in user_data["questions"]: #for question in existing 5th table entry
             #print question["question_id"], k["question_id"]
@@ -152,11 +141,11 @@ for respondent_id in respondents:
                             #    print question["answers"]
                             for answer_entry in question["answers"]: #for an answer structure in the list of answers from the questions in the responses table
                                 if debug: print "answer_entry = ", answer_entry
-                                if answer["answer_id"] == "7718418739": print "answer_entry = ", answer_entry
+                                #if answer["answer_id"] == "7718418739": print "answer_entry = ", answer_entry
                                 #print "answer_entry = ", answer_entry
                                 if (answer["answer_id"] == answer_entry["row"]):
                                     if debug: print "Answer:\t\t", answer
-                                    if answer["answer_id"] == "7718418739": print "Answer:\t\t", answer
+                                    #if answer["answer_id"] == "7718418739": print "Answer:\t\t", answer
                                     user_data["questions"].append({"question_id":question_id, "heading":heading, "answer":answer_entry}) #not answer god damnit
                                     #user_data.update({"question_id":question_id, "heading":heading, "answer":answer})
                                     if "col" in question and (answer["answer_id"] == answer_entry["col"]): print "############"
@@ -166,31 +155,14 @@ for respondent_id in respondents:
                                     user_data["questions"].append({"question_id":question_id, "heading":heading, "answer":answer_entry})
                                     #user_data.update({"question_id":question_id, "heading":heading, "answer":answer})
                                 #add each of those to the array of answers
-                                
-        
-
-
-    #print "..."
-    #result = db.session_table.insert_one({"subject_id": subject_id, "questions": user_data})
-    #print result.inserted_id
-    
-    #db.session_table.update({"subject_id": subject_id}, {"subject_id": subject_id,"questions": user_data}, upsert= True)
+                               
     result = db.session_table.update({"subject_id": subject_id}, user_data, upsert= True) #TODO: could just set the question field...
-    #print result
-    
-    #print
-    #cursor = db.session_table.find({"subject_id": subject_id})
-    #for document in cursor:
-    #    pprint.pprint(document)
-#sys.exit()
 
 print "5th table has been built"
     
-    
-#run a tell
-print "find ="
-cursor = db.session_table.find({"subject_id": "aa4360295e344a081fbf6cf81ede91"})
-for document in cursor:
-    pprint.pprint(document)
-print len(user_data["questions"])
-
+if debug:
+    print "find ="
+    cursor = db.session_table.find({"subject_id": "aa4360295e344a081fbf6cf81ede91"})
+    for document in cursor:
+        pprint.pprint(document)
+    print len(user_data["questions"])
