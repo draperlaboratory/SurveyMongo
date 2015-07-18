@@ -49,8 +49,6 @@ for respondent_id in respondents:
                 # this is an array of answers and a question_id
                 questions_from_responses.append(question)
 
-    #if debug == False: json.dump(questions, sys.stdout);
-    #if debug == False: pprint.pprint(questions) # {u'row': u'7718418739', u'text': u'justinbeiber'}],
     '''
     [{u'answers': [{u'row': u'7718418737', u'text': u'Zulaydonado'},
                {u'row': u'7718418738', u'text': u'246'},
@@ -78,11 +76,7 @@ for respondent_id in respondents:
                 if debug: print
                 if debug: print cust_var["variable_label"],"\t", question["answers"][0]["text"]#hardcoded [0]            
                 #found subject_ID!
-                subject_id = question["answers"][0]["text"]
-            #all_answers = question["answers"]
-            #print "all answers:", all_answers
-            #print document
-            
+                subject_id = question["answers"][0]["text"]           
             
         if l > 1 : print "*** More than one match to question_id", question["question_id"]
     if subject_id == "": 
@@ -133,27 +127,15 @@ for respondent_id in respondents:
                         heading = repr(answers["heading"])
                         for answer in answers["answers"]:
                             if debug : pprint.pprint(answer)
-                            #print ans["answer_id"],  answer
-                            #if "row" in answer: 
-                            # row 7718418739 has bieber...
-                            #if answer["answer_id"] == "7718418739": 
-                            #    print "!!!!!!!!!!!!!!"
-                            #    print question["answers"]
                             for answer_entry in question["answers"]: #for an answer structure in the list of answers from the questions in the responses table
                                 if debug: print "answer_entry = ", answer_entry
-                                #if answer["answer_id"] == "7718418739": print "answer_entry = ", answer_entry
-                                #print "answer_entry = ", answer_entry
                                 if (answer["answer_id"] == answer_entry["row"]):
                                     if debug: print "Answer:\t\t", answer
-                                    #if answer["answer_id"] == "7718418739": print "Answer:\t\t", answer
-                                    user_data["questions"].append({"question_id":question_id, "heading":heading, "answer":answer_entry}) #not answer god damnit
-                                    #user_data.update({"question_id":question_id, "heading":heading, "answer":answer})
+                                    user_data["questions"].append({"question_id":question_id, "heading":heading, "answer":answer_entry}) 
                                     if "col" in question and (answer["answer_id"] == answer_entry["col"]): print "############"
                                 elif "col" in question and (answer["answer_id"] == answer_entry["col"]):#question["answers"]["col"]):
                                     if debug: print "Answer:\t\t", answer
-                                    #print "new data"
                                     user_data["questions"].append({"question_id":question_id, "heading":heading, "answer":answer_entry})
-                                    #user_data.update({"question_id":question_id, "heading":heading, "answer":answer})
                                 #add each of those to the array of answers
                                
     result = db.session_table.update({"subject_id": subject_id}, user_data, upsert= True) #TODO: could just set the question field...
