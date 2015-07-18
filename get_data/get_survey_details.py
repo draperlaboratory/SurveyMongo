@@ -18,7 +18,7 @@ def run(name=""):
 
         ret = []
         for survey in reversed(survey_list['data']['surveys']):
-            print ("Info: Downloading", survey["title"], file=sys.stderr)
+            print ("Info: Downloading survey details for", survey["title"], file=sys.stderr)
             ret.append(get_survey_details(client, survey['survey_id']))
         return ret
         
