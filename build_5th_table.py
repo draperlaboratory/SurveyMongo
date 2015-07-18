@@ -70,7 +70,10 @@ for respondent_id in respondents:
     '''
     #now find the session ID hash in the survey_details
     '''
+    subject_id = ""
     if debug: print "\nFind details about those questions and answers:\n"
+    if debug: print "questions_from_responses", len(questions_from_responses)
+    if debug: print questions_from_responses
     for question in questions_from_responses: #for every entry in the array of questions from responses(answers and question_id)
         #search for record with that question_id
         cursor = db.survey_details.find({"data.custom_variables.question_id": question["question_id"]}) 
@@ -91,11 +94,13 @@ for respondent_id in respondents:
             
             
         if l > 1 : print "*** More than one match to question_id", question["question_id"]
-
+    if subject_id == "": 
+        print "Error: Could not find subject_id for respondent ID =", respondent_id
+        continue
     '''
     #We have no extracted just the session ID from those responses, there are a lot of other answers in there.
     '''
- 
+    
     #load the existing document for this subject
     user_data = {"subject_id" : subject_id, "questions" : []}
     cursor = db.session_table.find({"subject_id": subject_id})
