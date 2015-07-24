@@ -1,10 +1,7 @@
 set mongopath=C:\Progra~1\MongoDB\Server\3.0\bin
 
 @echo Downloading latest data...
-python get_respondent_ids.py > respondent_id_list.json
-python get_responses.py > responses.json
-python get_survey_details.py > survey_details.json
-python get_survey_ids.py > survey_ids.json
+python download_all.py
 
 @echo Drop existing table and insert that data into the collections
 @echo Data does not have uniqe _id fields so updating tables is impossible
