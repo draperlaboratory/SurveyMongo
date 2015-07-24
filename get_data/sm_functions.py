@@ -8,7 +8,7 @@ import requests
 #            survey_name - a string that references the OT; can be partial
 #            client 
 # output: survey_list - a json object that contains a list of surveys with title and id
-def get_survey_list(client, survey_name=""):
+def get_survey_list(client, survey_name="", start_date=None):
     HOST = "https://api.surveymonkey.net"
     SURVEY_LIST_ENDPOINT = "/v2/surveys/get_survey_list"
     survey_uri = "%s%s" % (HOST, SURVEY_LIST_ENDPOINT)
@@ -18,6 +18,7 @@ def get_survey_list(client, survey_name=""):
         survey_post_data = {}
         survey_post_data["title"] = survey_name
         survey_post_data["fields"] = ["title"] 
+        survey_post_data["start_modified_date"] = start_date
         survey_response = client.post(survey_uri, data=json.dumps(survey_post_data), verify=True)
     else:
         survey_response = client.post(survey_uri, '{"fields":["title"]}',  verify=True)
@@ -51,7 +52,7 @@ def get_respondent_list(client, survey_id, start_date=None):
 # get_responses retrieves the answers submitted by subjects to the OT questions
 # input:
 # output: 
-def get_responses(client, survey_id, respondent_ids):
+def get_responses(client, survey_id, respondent_ids, start_date=None):
     HOST = "https://api.surveymonkey.net"
     RESPONSE_ENDPOINT = "/v2/surveys/get_responses"
     response_uri = "%s%s" % (HOST, RESPONSE_ENDPOINT)
@@ -60,6 +61,7 @@ def get_responses(client, survey_id, respondent_ids):
     data = {}
     response_post_data["survey_id"] = survey_id
     response_post_data["respondent_ids"] = respondent_ids
+    response_post_data["start_date"] = start_date
     response_post_data["page_size"] = 1000
     
     response_response = client.post(response_uri, data=json.dumps(response_post_data))
@@ -70,7 +72,7 @@ def get_responses(client, survey_id, respondent_ids):
 # get_survey_details retrieves the survey questions
 # input
 # output
-def get_survey_details(client, survey_id):
+def get_survey_details(client, survey_id, start_date=None):
     HOST = "https://api.surveymonkey.net"
     DETAILS_ENDPOINT = "/v2/surveys/get_survey_details"
     details_uri = "%s%s" % (HOST, DETAILS_ENDPOINT)
@@ -78,6 +80,7 @@ def get_survey_details(client, survey_id):
     response_post_data = {}
     data = '{}'
     response_post_data["survey_id"] = survey_id
+    response_post_data["start_date"] = start_date
     response_survey_details = client.post(details_uri, data=json.dumps(response_post_data))
     response_survey_details_json = response_survey_details.json()
     # details = response_survey_details["data"]
