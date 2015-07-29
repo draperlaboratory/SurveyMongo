@@ -8,7 +8,7 @@ python download_all.py
 %mongopath%\mongoimport.exe respondent_id_list.json /drop
 %mongopath%\mongoimport.exe responses.json /drop
 %mongopath%\mongoimport.exe survey_details.json /drop
-%mongopath%\mongoimport.exe survey_ids.json /drop
+REM %mongopath%\mongoimport.exe survey_ids.json /drop
 
 echo updating the session_table from those collections
 c:\Python27\python.exe ..\build_5th_table.py
