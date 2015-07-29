@@ -1,5 +1,5 @@
 import get_respondent_ids, get_responses, get_survey_details, get_survey_ids
-import datetime
+import datetime, json
 
 now = datetime.datetime.now()
 print ("Current date & time = %s" % now)
@@ -8,20 +8,27 @@ try:
     f = open("date.txt", "r") #open date file if it exists
     date = f.readln()
 except:
-    date = '2015-07-22 00:00:00'
+    date = '2011-07-22 00:00:00'
 print (date)
 
 #todo: get names of surveys and share it, save 2 out of 1269 transfers
 #todo: there may also be some coherence with respondents
 
 with open("respondent_id_list.json", "w") as f:
-    f.write("%s"%get_respondent_ids.run(name="", date=date))
+    #ret = 
+    get_respondent_ids.run(name="", date=date)
+    for item in ret:
+        json.dump(item, f)
 
-with open("get_responses.json", "w") as f:
-    f.write("%s"%get_responses.run(name="", date=date))
+with open("responses.json", "w") as f:
+    ret = get_responses.run(name="", date=date)
+    for item in ret:
+        json.dump(item, f)
 
 with open("survey_details.json", "w") as f:
-    f.write("%s"%get_survey_details.run(name="", date=date))
+    ret = get_survey_details.run(name="", date=date)
+    for item in ret:
+        json.dump(item, f)
   
 
 #get today's date
