@@ -13,6 +13,8 @@ debug = False
 from pymongo import MongoClient
 import pprint
 import json, sys
+import datetime
+now = datetime.datetime.now()
 
 client = MongoClient() #replace with url later
 db = client.test
@@ -141,7 +143,8 @@ for respondent_id in respondents:
     result = db.session_table.update({"subject_id": subject_id}, user_data, upsert= True) #TODO: could just set the question field...
 
 print "5th table has been built"
-    
+print ("Total execution time for session table script: %s"%(datetime.datetime.now()-now))  
+
 if debug:
     print "find ="
     cursor = db.session_table.find({"subject_id": "aa4360295e344a081fbf6cf81ede91"})
