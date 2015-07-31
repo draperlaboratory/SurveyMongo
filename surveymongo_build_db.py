@@ -23,6 +23,8 @@ survey_uri = "%s%s" % (HOST, SURVEY_LIST_ENDPOINT)
 survey_post_data = {}
 survey_post_data["fields"] = ["date_modified", "title"]
 survey_post_data['title'] = ' UT '
+
+print 'Getting a list of surveys... '
 survey_response = sm_client.post(survey_uri, data=json.dumps(survey_post_data))
 # check this following result to proceed without errors
 survey_response.headers 
@@ -35,6 +37,7 @@ details_uri = "%s%s" % (HOST, '/v2/surveys/get_survey_details')
 details_post_data = {}
 survey_details = []
 
+print 'Getting details for surveys...'
 for survey in survey_list:
     details_post_data['survey_id'] = survey['survey_id']
     details_response = sm_client.post(details_uri, data=json.dumps(details_post_data))
@@ -81,12 +84,13 @@ import pymongo
 mongoclient = pymongo.MongoClient()
 db = mongoclient.answers
 
+print 'Adding sessionID table to DB'
 db.drop_collection('sessions')
 db.create_collection('sessions')
 db.sessions.insert_many(sessions)
 
 # ## Create a master answer table database
-
+print 'Adding question and answer table to DB'
 db.drop_collection('answer_table')
 db.create_collection('answer_table')
 db.answer_table.insert_many(question_answer_table)
@@ -94,6 +98,7 @@ db.answer_table.insert_many(question_answer_table)
 # ## Get SM responses and dump those into Mongo also
 # (but start with just one to test until the date crawler function is up...)
 
+print 'Getting participant responses...'
 respondent_uri = "%s%s" % (HOST, '/v2/surveys/get_respondent_list')
 respondent_post_data = {}
 respondent_post_data['fields'] = ['date_modified', 'status']
@@ -120,7 +125,7 @@ for survey in survey_list:
         responses_json = responses_response.json()
         survey_responses.append(responses_json)
 
-
+print 'Adding responses to DB'
 db.drop_collection('responses')
 db.create_collection('responses')
 
@@ -129,6 +134,7 @@ for survey_response in survey_responses:
 
 # ## Import config file into new collection
 
+print 'Adding varname lookup table to DB'
 import csv
 varnames = []
 with open('Yr3_UT_ConfigFile.csv') as csvfile:
