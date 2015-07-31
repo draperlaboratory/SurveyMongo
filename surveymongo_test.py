@@ -1,5 +1,9 @@
 # ## Test connections between collections
 
+import pymongo
+mongoclient = pymongo.MongoClient()
+db = mongoclient.answers
+
 for response in db.responses.find({'questions.answers.text':'bbd89b5513f27da801bcca6bf4279e::413'}):
     for question in response['questions']:
         question_id = question['question_id']
