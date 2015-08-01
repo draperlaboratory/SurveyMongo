@@ -21,13 +21,21 @@ def run(name="", date=None):
         respondent_list = {}
 
         ret = []
-        for survey in reversed(survey_list['data']['surveys']):
-            print ("Info: Downloading responses for", survey["title"], file=sys.stderr)
-            respondent_list[survey['survey_id']] = get_respondent_list(client, survey['survey_id'], date) #optimize
-            
-            for respondent in respondent_list[survey['survey_id']]['data']['respondents']:
-                ret.append(get_responses(client, survey['survey_id'], [respondent['respondent_id']], date))
-              
+        try:
+            for survey in reversed(survey_list['data']['surveys']):
+                print ("Info: Downloading responses for", survey["title"], file=sys.stderr)
+                respondent_list[survey['survey_id']] = get_respondent_list(client, survey['survey_id'], date) #optimize
+                
+                try:
+                    for respondent in respondent_list[survey['survey_id']]['data']['respondents']:
+                        ret.append(get_responses(client, survey['survey_id'], [respondent['respondent_id']], date))
+                except:
+                    print ("Exception")
+                    print ("respondent_list = %s"%respondent_list)
+        except:
+            print("Exception, all responses data is bad")
+            print(sys.exc_info()[0])
+            print("survey_list = %s"%survey_list)        
         return ret
         
 if __name__ == '__main__':
