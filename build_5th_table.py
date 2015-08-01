@@ -31,7 +31,7 @@ if debug: print "\nGet all respondents IDs:\n"
 respondents = []
 cursor = db.respondent_id_list.find({ },{"data.respondents.respondent_id": 1}) #no way to return just the fields, always nested deep
 for document in cursor:
-    for item in (document["data"]["respondents"]):
+    for item in (document["data"]["respondents"]): #this will crash if no data in db...
         respondents.append(item["respondent_id"])
 if debug: print "respondents:", respondents
 print "Respondents:", len(respondents)
