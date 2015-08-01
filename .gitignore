@@ -11,3 +11,9 @@ mongotest.py
 README.txt
 *.pyc
 get_data/private_key.txt
+get_data/verizon_tests/test_fresh.txt
+get_data/test_without_upsert/test_fresh.txt
+get_data/verizon_tests/test_fresh_2.txt
+get_data/test_without_upsert/test_update2.txt
+get_data/test_without_upsert/test_update.txt
+get_data/test_fresh.txt
