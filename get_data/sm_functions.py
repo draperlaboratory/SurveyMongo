@@ -1,5 +1,6 @@
 import json
 import requests
+import sys
 
 #************************** functions *****************************************
 
@@ -22,8 +23,14 @@ def get_survey_list(client, survey_name="", start_date=None):
         survey_response = client.post(survey_uri, data=json.dumps(survey_post_data), verify=True)
     else:
         survey_response = client.post(survey_uri, '{"fields":["title"]}',  verify=True)
-    survey_response_json = survey_response.json()
-    #survey_list = survey_response_json["data"]["surveys"] not being used...
+    try: #trap error here, not sure of cause yet. bad transfer?
+        survey_response_json = survey_response.json()
+    except:
+        print "Exception occurred"
+        print sys.exc_info()[0]
+        print "survey_name =", survey_name
+        print "survey_response =", survey_response
+        survey_response_json = ""    #survey_list = survey_response_json["data"]["surveys"] not being used...
     return survey_response_json
 
 # get_respondent_list retrieves a list of respondent id's for a given survey
@@ -45,8 +52,16 @@ def get_respondent_list(client, survey_id, start_date=None):
     respondent_post_data["fields"] = ["ip_address", "date_start", "date_modified", "custom_id", "email", "recipient_id"]
     
     respondents_response = client.post(respondent_uri, data=json.dumps(respondent_post_data))
-    respondents_response_json = respondents_response.json()
-    respondents_ids = respondents_response_json["data"]["respondents"]
+    try:
+        respondents_response_json = respondents_response.json()
+    except:
+        print "Exception occurred"
+        print sys.exc_info()[0]
+        print "survey_id =", survey_id
+        print "respondents_response =", respondents_response
+        respondents_response_json = ""    
+    # not used, and causes crashes
+    #respondents_ids = respondents_response_json["data"]["respondents"]
     return respondents_response_json
 
 # get_responses retrieves the answers submitted by subjects to the OT questions
@@ -65,8 +80,15 @@ def get_responses(client, survey_id, respondent_ids, start_date=None):
     response_post_data["page_size"] = 1000
     
     response_response = client.post(response_uri, data=json.dumps(response_post_data))
-    response_response_json = response_response.json()
-    responses = response_response_json["data"]
+    try: #trap error here, not sure of cause yet. bad transfer?
+        response_response_json = response_response.json()
+        responses = response_response_json["data"]
+    except:
+        print "Exception occurred"
+        print sys.exc_info()[0]
+        print "survey_id =", survey_id
+        print "response_response =", response_response
+        response_response_json = ""
     return response_response_json
 
 # get_survey_details retrieves the survey questions
