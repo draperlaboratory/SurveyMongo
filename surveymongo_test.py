@@ -31,8 +31,8 @@ def collect_responses(session_id):
                 subtype = 'open'
             # print '(Family:)', family 
             # print '(Subtype:)', subtype
-            response_details['family'] = copy.copy(family)
-            response_details['subtype'] = copy.copy(subtype)
+            response_details['question_family'] = copy.copy(family)
+            response_details['question_subtype'] = copy.copy(subtype)
             
             # get the varnames
             try:
@@ -40,7 +40,7 @@ def collect_responses(session_id):
             except:
                 varname = 'none'
             # print '(Varname:)', varname
-            response_details['varname'] = copy.copy(varname)
+            response_details['question_varname'] = copy.copy(varname)
             
             # switch on question family and print responses
             if family == 'matrix':
@@ -51,25 +51,25 @@ def collect_responses(session_id):
                         position = col['position']
                         text = col['text']
                     # print '(Answer:)', key, value, '-', text
-                    response_details['key'] = copy.copy(key)
-                    response_details['position'] = copy.copy(position)
-                    response_details['text'] = copy.copy(text)
+                    response_details['answer_key'] = copy.copy(key)
+                    response_details['answer_position'] = copy.copy(position)
+                    response_details['answer_text'] = copy.copy(text)
             elif family == 'open_ended':
                 for answer in question['answers']:
                     text = answer['text']
                     # print '(Answer:)', answer['text']
-                    response_details['text'] = copy.copy(text)
+                    response_details['answer_text'] = copy.copy(text)
             elif family == 'single_choice':
                 for answer in question['answers']:
                     for row in db.answer_table.find({'answer_id':answer['row']}):
                         position = row['position']
                         text = row['text']
                         # print '(Answer:)', position, '-', text
-                        response_details['position'] = copy.copy(position)
-                        response_details['text'] = copy.copy(text)
+                        response_details['answer_position'] = copy.copy(position)
+                        response_details['answer_text'] = copy.copy(text)
             else:
                 # print question['answers']
-                response_details['answer'] = copy.copy(question['answers'])
+                response_details['answer_details'] = copy.copy(question['answers'])
 
             # print '\n'
             responses.append(copy.deepcopy(response_details))
