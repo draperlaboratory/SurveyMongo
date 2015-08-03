@@ -1,0 +1,25 @@
+<style>
+	table, th, td {
+	    border: 1px solid black;
+	    border-collapse: collapse;
+	}
+	th, td {
+	    padding: 15px;
+	}
+</style>
+
+
+{% for dict in list %}
+	<table>
+		<tr>
+			<th>Key</th>
+			<th>Value</th>
+		</tr>
+		{% for key, value in dict.iteritems() %}
+			<tr>
+				<td>{{key}}:</td>
+				<td>{{value}}</td>
+			</tr>
+		{% endfor %}
+	</table><br>
+{% endfor %}
