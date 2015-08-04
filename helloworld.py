@@ -20,8 +20,11 @@ def surveymongo(session_id):
 	# this = [{'ID':'one', 'Name':'Bob', 'Role':'developer'}, {'ID':'two'}]
 	responses = collect_responses(session_id)
 	sorted_responses = sorted(responses, key=lambda k: k['question_id'])
-	return render_template('list.html', list=responses)
+	if len(sorted_responses) > 0:
+		return render_template('list.html', list=responses)
+	else:
+		return render_template('unknown_id.html', session_id=session_id)
 
 if __name__ == '__main__':
-	app.run(debug=True)
+	app.run(debug=True, port=8000)
 
