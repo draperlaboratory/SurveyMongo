@@ -1,3 +1,4 @@
 .DS_Store
 ipynb
 surveymongo.pyc surveymongo_test.pyc
+*.pyc
