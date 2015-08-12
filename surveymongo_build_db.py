@@ -1,6 +1,5 @@
 import requests
 import json
-import datetime
 import copy
 
 sm_client = requests.session()
@@ -16,9 +15,7 @@ HOST = "https://api.surveymonkey.net"
 SURVEY_LIST_ENDPOINT = "/v2/surveys/get_survey_list"
 
 
-# ## Get a list of all surveys
-
-
+# Get a list of all surveys
 survey_uri = "%s%s" % (HOST, SURVEY_LIST_ENDPOINT)
 survey_post_data = {}
 survey_post_data["fields"] = ["date_modified", "title"]
@@ -26,12 +23,13 @@ survey_post_data['title'] = ' UT '
 
 print 'Getting a list of surveys... '
 survey_response = sm_client.post(survey_uri, data=json.dumps(survey_post_data))
+
 # check this following result to proceed without errors
 survey_response.headers 
 survey_response_json = survey_response.json()
 survey_list = survey_response_json["data"]["surveys"]
 
-# ## Get the details for all the surveys
+# Get the details for all the surveys
 
 details_uri = "%s%s" % (HOST, '/v2/surveys/get_survey_details')
 details_post_data = {}
@@ -44,7 +42,7 @@ for survey in survey_list:
     details_json = details_response.json()
     survey_details.append(details_json)
 
-# ## Create a master answer dataframe that builds a single entry for every unique question-answer.  This dictionary will be the lookup table for answers to questions 
+# Create a master answer dataframe that builds a single entry for every unique question-answer.  This dictionary will be the lookup table for answers to questions 
 
 question_answer_table = []
 
@@ -68,9 +66,8 @@ for survey in survey_details:
             else:
                 question_answer_table.append(copy.deepcopy(question_elements))
 
-# ##Create a sessionID questionID lookup table
+#Create a sessionID questionID lookup table
 sessions = []
-
 for survey_detail in survey_details:
     try:
         sessionIDquestionID = survey_detail['data']['custom_variables'][0]['question_id']
@@ -79,7 +76,7 @@ for survey_detail in survey_details:
     except IndexError:
         sessionIDquestionID = 0
 
-# ## Start dumping sessionID table and answer table into Mongo
+# Start dumping sessionID table and answer table into Mongo
 import pymongo
 mongoclient = pymongo.MongoClient()
 db = mongoclient.answers
@@ -89,15 +86,13 @@ db.drop_collection('sessions')
 db.create_collection('sessions')
 db.sessions.insert_many(sessions)
 
-# ## Create a master answer table database
+# Create a master answer table database
 print 'Adding question and answer table to DB'
 db.drop_collection('answer_table')
 db.create_collection('answer_table')
 db.answer_table.insert_many(question_answer_table)
 
-# ## Get SM responses and dump those into Mongo also
-# (but start with just one to test until the date crawler function is up...)
-
+# Get SM responses and dump those into Mongo also
 print 'Getting participant responses...'
 respondent_uri = "%s%s" % (HOST, '/v2/surveys/get_respondent_list')
 respondent_post_data = {}
@@ -107,7 +102,6 @@ response_uri = "%s%s" % (HOST, '/v2/surveys/get_responses')
 response_post_data = {}
 
 # cycle through all the surveys and collect responses
-# survey_respondents = []
 survey_responses = []
 for survey in survey_list:
     respondent_post_data['survey_id'] = survey['survey_id']
