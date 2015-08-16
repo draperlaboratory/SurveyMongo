@@ -4,9 +4,9 @@ import pymongo, copy
 mongoclient = pymongo.MongoClient()
 db = mongoclient.answers
 
-def collect_responses(session_id):
+def collect_responses(user_hash):
     responses = []
-    for response in db.responses.find({'questions.answers.text':session_id}):
+    for response in db.responses.find({'user_hash':user_hash}):
         for question in response['questions']:
             response_details = {}
             question_id = question['question_id']

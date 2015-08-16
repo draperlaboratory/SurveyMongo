@@ -38,7 +38,7 @@ def get_respondent_list(client, survey_id, start_date=None):
 	data = '{}'
 	respondent_post_data["survey_id"] = survey_id
 	respondent_post_data["start_date"] = start_date
-	respondent_post_data["fields"] = ["ip_address", "date_start", "date_modified", "custom_id", "email", "recipient_id"]
+	respondent_post_data["fields"] = ["date_start", "date_modified", "status"]
 	
 	respondents_response = client.post(respondent_uri, data=json.dumps(respondent_post_data))
 	respondents_response_json = respondents_response.json()
