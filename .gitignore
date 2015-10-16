@@ -3,3 +3,4 @@ ipynb
 *.pyc
 *.ipynb
 __pycache__/
+*.csv
