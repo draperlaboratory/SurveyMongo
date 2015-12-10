@@ -3,6 +3,7 @@
 from __future__ import print_function
 import sys
 import requests
+import argparse
 import json
 from sm_functions import get_survey_list, get_survey_details
 
@@ -15,6 +16,11 @@ def run(name="", date=None):
         survey_name = str(name)
         print ("Info: Downloading survey list", file=sys.stderr)
         survey_list = get_survey_list(client, survey_name) #optimize
+
+	print (survey_list, file=sys.stderr)
+	if survey_list["status"] == 1:
+	    print ("Error: " + survey_list["errmsg"], file=sys.stderr)
+            sys.exit(1)
 
         ret = []
         for survey in reversed(survey_list['data']['surveys']):
