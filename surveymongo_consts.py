@@ -1,0 +1,5 @@
+SM_QUERIES_PER_SEC = -1
+SM_DATE_FILE = './date.txt'
+SM_DATE_DEFAULT = '2011-07-22 00:00:00'
+SM_CONFIG_PATH = './configs/'
+SM_REPORT_PATH = './reports/'
