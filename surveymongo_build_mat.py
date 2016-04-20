@@ -8,6 +8,9 @@ import pymongo
 import surveymongo
 import sys
 import argparse
+from datetime import datetime
+from shutil import copyfile
+from surveymongo_consts import SM_REPORT_PATH
 
 def run(survey_name="", expName=""):
     if (len(sys.argv)<2):
@@ -59,8 +62,10 @@ def run(survey_name="", expName=""):
         rd = surveymongo.get_responses_dict(db, user)
         mat = mat.append(rd, ignore_index=True)
 
-    filename = './reports/' + survey_name + '_mat.csv'
+    filename = SM_REPORT_PATH + survey_name + '_mat.csv'
     mat.to_csv(filename)
+    now_str = "%s"%datetime.now().strftime("_%Y-%m-%d-%H:%M:%S")
+    copyfile(filename, SM_REPORT_PATH+survey_name+now_str+'_mat.csv')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='create mat file for surveys that match the name')

@@ -4,11 +4,50 @@ import copy
 import argparse
 import pymongo
 import csv
+from surveymongo_consts import SM_QUERIES_PER_SEC, SM_DATE_DEFAULT, SM_DATE_FILE, SM_CONFIG_PATH
 from time import sleep
+import datetime
+from os import path
 
-SM_QUERIES_PER_SEC = -1
+def run(survey_name="", rebuild=False):
+    date = ''
+    mongoclient = pymongo.MongoClient()
+    db = mongoclient.answers
 
-def run(survey_name="", start_date=None):
+    if rebuild or not path.isfile(SM_DATE_FILE):
+        print 'Setting response date to default: ' + SM_DATE_DEFAULT
+        date = SM_DATE_DEFAULT
+
+        print 'Rebuilding Database from Scratch ...'
+        db.drop_collection('respondents')
+        db.create_collection('respondents')
+        db.drop_collection('responses')
+        db.create_collection('responses')
+        db.drop_collection('user_hashes')
+        db.create_collection('user_hashes')
+
+        rebuild_db(survey_name)
+        print 'Done!'
+    else:
+        f = open(SM_DATE_FILE)
+        date = f.readline()
+        print 'Updating responses from last read: ' + date
+
+    print 'Updating response tables ...'
+    get_responses(date)
+    print 'Done!'
+
+    #remove split seconds, they break survey monkey
+    #now_str = "%s"%datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    last_date = db.respondents.find().sort('date_modified',pymongo.DESCENDING)[0]['date_modified']
+    print 'Setting ' + SM_DATE_FILE + ' to ' + last_date
+    #write last respondent date 
+    with open(SM_DATE_FILE, "w") as f:
+        f.write(last_date)
+
+
+#################################################
+def rebuild_db(survey_name):
     sm_client = requests.session()
     #sm_client.headers = {
 #	"Authorization" : "bearer paTBz61kMlD0mPWrsaHR3921EuYbHlBvqU0GDZQ.5nahBvB1GbdZpbh2WnOzXY4S1m4CvPfPmXO9cABCSafzRjNeH9zln7ik1mnK.DPSQSI=", 
@@ -35,7 +74,7 @@ def run(survey_name="", start_date=None):
         #survey_post_data["fields"] = ["date_modified", "title"]
         #survey_post_data['title'] = ' UT '
         survey_post_data["fields"] = ["date_modified", "title"]
-        survey_post_data["start_modified_date"] = start_date
+        survey_post_data["start_modified_date"] = None
         survey_post_data["title"] = survey_name
         
         survey_response = sm_client.post(survey_uri, data=json.dumps(survey_post_data), verify=True)
@@ -131,78 +170,12 @@ def run(survey_name="", start_date=None):
     db.create_collection('answer_table')
     db.answer_table.insert_many(question_answer_table)
     
-    # Get SM responses and dump those into Mongo also
-    print 'Getting participant responses...'
-    respondent_uri = "%s%s" % (HOST, '/v2/surveys/get_respondent_list')
-    respondent_post_data = {}
-    respondent_post_data['fields'] = ['date_start', 'date_modified', 'status', 'custom_id']
-    respondent_post_data['start_modified_date'] = '2013-01-01 00:00:00'
-    response_uri = "%s%s" % (HOST, '/v2/surveys/get_responses')
-    response_post_data = {}
-    
-    # cycle through all the surveys and collect responses
-    survey_responses = []
-    survey_respondents = []
-    for survey in survey_list:
-        respondent_post_data['survey_id'] = survey['survey_id']
-        respondent_response = sm_client.post(respondent_uri, data=json.dumps(respondent_post_data))
-        respondent_response_json = respondent_response.json()
-        respondent_ids = []
-    
-        for respondent in respondent_response_json['data']['respondents']:
-            if respondent['status'] == 'completed':
-                respondent_ids.append(respondent['respondent_id'])
-                survey_respondents.append(respondent)
-        if len(respondent_ids) > 0:
-            response_post_data['survey_id'] = survey['survey_id']
-            response_post_data['respondent_ids'] = respondent_ids
-            responses_response = sm_client.post(response_uri, data=json.dumps(response_post_data))
-            responses_json = responses_response.json()
-            survey_responses.append(responses_json)
-    
-    print 'Adding respondents to DB'
-    db.drop_collection('respondents')
-    db.create_collection('respondents')
-    
-    db.respondents.insert_many(survey_respondents)
-
-    print 'Adding responses to DB'
-    db.drop_collection('responses')
-    db.create_collection('responses')
-    
-    for survey_response in survey_responses:
-        db.responses.insert_many(survey_response['data'])
-    
-    # create table of user hash / session ID
-    hashes = []
-    response_hashes = []
-    for survey_var in survey_subjectIDs:
-        survey_id = survey_var["survey_id"]
-        question_id = survey_var["question_id"]
-        for response in db.responses.find():
-            for question in response["questions"]:
-                if question["question_id"] == question_id:
-                    for answer in question["answers"]:
-                        hash_answer = {}
-                        hash_answer['survey_id'] = survey_id
-                        hash_answer['question_id'] = question_id
-                        hash_answer['response_id'] = response['_id']
-                        hash_answer['respondent_id'] = response['respondent_id']
-                        hash_answer['user_hash'] = answer['text']
-                        hashes.append(hash_answer)
-                        #db.responses.update_one({'_id', response['_id']},
-                        #    {'$set': {'user_hash':hash_answer['user_hash']}})
-
-    print 'Adding user hashes to DB'
-    db.drop_collection('user_hashes')
-    db.create_collection('user_hashes')
-    db.user_hashes.insert_many(hashes)
         
     # ## Import config file into new collection
     
     print 'Adding varname lookup table to DB'
     varnames = []
-    with open('./configs/' + survey_name + '_ConfigFile.csv') as configfile:
+    with open(SM_CONFIG_PATH + survey_name + '_ConfigFile.csv') as configfile:
         reader = csv.DictReader(configfile)
         for row in reader:
             varnames.append({'question_id':row['Question ID'], 
@@ -227,12 +200,108 @@ def run(survey_name="", start_date=None):
     db.create_collection('time_varnames')
     db.time_varnames.insert_many(time_varnames)
 
+#################################################
+def get_responses(start_date):
+    mongoclient = pymongo.MongoClient()
+    db = mongoclient.answers
+
+    sm_client = requests.session()
+    with open("private_key.txt", "r") as f:
+        sm_client.headers = json.loads(f.readline())
+        sm_client.params = json.loads(f.readline())
+
+    HOST = "https://api.surveymonkey.net"
+    SURVEY_LIST_ENDPOINT = "/v2/surveys/get_survey_list"
+
+   # Get SM responses and dump those into Mongo also
+    print 'Getting participant responses...'
+    respondent_uri = "%s%s" % (HOST, '/v2/surveys/get_respondent_list')
+    respondent_post_data = {}
+    respondent_post_data['fields'] = ['date_start', 'date_modified', 'status', 'custom_id']
+    respondent_post_data['start_modified_date'] = '2013-01-01 00:00:00'
+    response_uri = "%s%s" % (HOST, '/v2/surveys/get_responses')
+    response_post_data = {}
+    
+    # cycle through all the surveys and collect responses
+    survey_list = db.sessions.find()
+    survey_responses = []
+    survey_respondents = []
+    for survey in survey_list:
+        respondent_post_data['survey_id'] = survey['survey_id']
+        respondent_post_data['start_date'] = start_date
+        respondent_response = sm_client.post(respondent_uri, data=json.dumps(respondent_post_data))
+        respondent_response_json = respondent_response.json()
+        respondent_ids = []
+    
+        for respondent in respondent_response_json['data']['respondents']:
+            if respondent['status'] == 'completed':
+                respondent_ids.append(respondent['respondent_id'])
+                survey_respondents.append(respondent)
+        if len(respondent_ids) > 0:
+            response_post_data['survey_id'] = survey['survey_id']
+            response_post_data['respondent_ids'] = respondent_ids
+            response_post_data['start_date'] = start_date
+            responses_response = sm_client.post(response_uri, data=json.dumps(response_post_data))
+            responses_json = responses_response.json()
+            survey_responses.append(responses_json)
+    
+    print 'Adding respondents to DB'
+    print '    contained ' + str(db.respondents.count()) + ' respondents ...'
+    
+    for respondent in survey_respondents:
+        db.respondents.find_one_and_replace({'respondent_id':respondent['respondent_id']},respondent,upsert=True)
+    #if survey_respondents != []:
+    #    db.respondents.insert_many(survey_respondents)
+    print '    ... now has ' + str(db.respondents.count()) + ' respondents.'
+
+    print 'Adding responses to DB'
+    print '    contained ' + str(db.responses.count()) + ' responses ...'
+    new_responses = []
+    for survey_response in survey_responses:
+        for datum in survey_response['data']:
+            new_responses.append(datum)
+
+    if new_responses != []:
+        db.responses.insert_many(new_responses)
+        #db.responses.insert_many(survey_response['data'])
+    print '    ... now has ' + str(db.responses.count()) + ' responses.'
+    
+    # create table of user hash / session ID
+    hashes = []
+    response_hashes = []
+    #for survey_var in survey_subjectIDs:
+    for survey_var in db.sessions.find():
+        survey_id = survey_var["survey_id"]
+        question_id = survey_var["question_id"]
+        for response in new_responses:
+            for question in response["questions"]:
+                if question["question_id"] == question_id:
+                    for answer in question["answers"]:
+                        hash_answer = {}
+                        hash_answer['survey_id'] = survey_id
+                        hash_answer['question_id'] = question_id
+                        hash_answer['response_id'] = response['_id']
+                        hash_answer['respondent_id'] = response['respondent_id']
+                        hash_answer['user_hash'] = answer['text']
+                        hashes.append(hash_answer)
+                        #db.responses.update_one({'_id', response['_id']},
+                        #    {'$set': {'user_hash':hash_answer['user_hash']}})
+
+    print 'Adding user hashes to DB'
+    print '    contained ' + str(db.user_hashes.count()) + ' hashes ...'
+    if hashes != []:
+        db.user_hashes.insert_many(hashes)
+    print '    ... now has ' + str(db.user_hashes.count()) + ' hashes.'
+
+#################################################
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='create database of surveys that match the name and date')
     parser.add_argument('--name', default="", dest='name',
                    help='Name of survey, default is all')
-    parser.add_argument('--date', default=None, dest='date',
-                   help='Date and time of last read, default is None')
+    parser.add_argument('--rebuild', action='store_true',
+                   help='Rebuild DB despite presence of ./date.txt')
+    #parser.add_argument('--date', default=None, dest='date',
+    #               help='Date and time of last read, default is None')
     args = parser.parse_args()
 
-    ret = run(args.name, args.date)
+    ret = run(args.name, args.rebuild)
