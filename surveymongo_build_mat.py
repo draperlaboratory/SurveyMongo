@@ -36,6 +36,7 @@ def run(survey_name="", expName=""):
         pass
 
     new_varnames = varnames + time_varnames
+    new_varnames.append('mechanicalTurkCode')
 
     mat = pandas.DataFrame(columns=new_varnames)
 
@@ -46,7 +47,9 @@ def run(survey_name="", expName=""):
         #UT_users_json = requests.get('http://172.31.38.3/experiment/users/experiment/User%20Testing', timeout=5)
         UT_users_json = requests.get('http://127.0.0.1:8000/experiment/experiment/users/experiment/' + expName, timeout=5)
         UT_users = UT_users_json.json()
+	print "Start UT_users"
         print UT_users
+	print "End UT_users"
     except:
         print('Cannot connect to STOUT server, working with all users')
         UT_users = users
@@ -60,6 +63,9 @@ def run(survey_name="", expName=""):
     #print user_list
     for user in user_list:
         rd = surveymongo.get_responses_dict(db, user)
+	rd['mechanicalTurkCode']=UT_users[user]['mtcode']
+        for key, value in UT_users[user]['vars'].iteritems():
+            rd[key]=value
         mat = mat.append(rd, ignore_index=True)
 
     filename = SM_REPORT_PATH + survey_name + '_mat.csv'
