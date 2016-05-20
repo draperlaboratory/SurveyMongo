@@ -4,7 +4,7 @@ import copy
 import argparse
 import pymongo
 import csv
-from surveymongo_consts import SM_QUERIES_PER_SEC, SM_DATE_DEFAULT, SM_DATE_FILE, SM_CONFIG_PATH
+from surveymongo_consts import SM_QUERIES_PER_SEC, SM_DATE_DEFAULT, SM_DATE_FILE, SM_CONFIG_PATH, SM_MAX_RESP
 from time import sleep
 import datetime
 from os import path
@@ -226,7 +226,10 @@ def get_responses(start_date):
     survey_list = db.sessions.find()
     survey_responses = []
     survey_respondents = []
+    n_s = 0
     for survey in survey_list:
+        n_s = n_s + 1
+        print "  Survey", n_s, "of", survey_list.count()
         respondent_post_data['survey_id'] = survey['survey_id']
         respondent_post_data['start_date'] = start_date
         respondent_response = sm_client.post(respondent_uri, data=json.dumps(respondent_post_data))
@@ -237,13 +240,31 @@ def get_responses(start_date):
             if respondent['status'] == 'completed':
                 respondent_ids.append(respondent['respondent_id'])
                 survey_respondents.append(respondent)
-        if len(respondent_ids) > 0:
+        sent = 0
+        while sent < len(respondent_ids):
+            print "    Response", sent, "of", len(respondent_ids)
+            send_responses = []
+            if len(respondent_ids) - sent > SM_MAX_RESP:
+                send_responses = respondent_ids[sent:sent+SM_MAX_RESP]
+                sent = sent+SM_MAX_RESP
+            else:
+                send_responses = respondent_ids[sent:]
+                sent = len(respondent_ids)
+
             response_post_data['survey_id'] = survey['survey_id']
-            response_post_data['respondent_ids'] = respondent_ids
+            response_post_data['respondent_ids'] = send_responses
             response_post_data['start_date'] = start_date
             responses_response = sm_client.post(response_uri, data=json.dumps(response_post_data))
             responses_json = responses_response.json()
             survey_responses.append(responses_json)
+
+        #if len(respondent_ids) > 0:
+        #    response_post_data['survey_id'] = survey['survey_id']
+        #    response_post_data['respondent_ids'] = respondent_ids
+        #    response_post_data['start_date'] = start_date
+        #    responses_response = sm_client.post(response_uri, data=json.dumps(response_post_data))
+        #    responses_json = responses_response.json()
+        #    survey_responses.append(responses_json)
     
     print 'Adding respondents to DB'
     print '    contained ' + str(db.respondents.count()) + ' respondents ...'
@@ -258,8 +279,11 @@ def get_responses(start_date):
     print '    contained ' + str(db.responses.count()) + ' responses ...'
     new_responses = []
     for survey_response in survey_responses:
-        for datum in survey_response['data']:
-            new_responses.append(datum)
+        try:
+            for datum in survey_response['data']:
+                new_responses.append(datum)
+        except KeyError:
+            print "NO DATA FOR:", survey_response 
 
     if new_responses != []:
         db.responses.insert_many(new_responses)
