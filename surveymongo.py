@@ -1,5 +1,6 @@
 import pymongo
 from bson.objectid import ObjectId
+import unicodedata
 
 def setup_client():
 	client = pymongo.MongoClient()
@@ -101,12 +102,27 @@ def get_responses_dict(db, user_hash):
                         #answer_response = db.answers.find_one({'answer_id':answer['col_choice']})['position']
                         answer_varname = db.varnames.find_one({'answer_id':answer['row']})['varname']
                     else:
-                        answer_varname = db.varnames.find_one({'answer_id':answer['row']})['varname']
+                        answer_varname = ''
+                        if question_details['subtype'] == 'rating':
+                            answer_varname = db.varnames.find_one({'answer_id':answer['col']})['varname']
+                        else:
+                            answer_varname = db.varnames.find_one({'answer_id':answer['row']})['varname']
+
                         if question_details['family'] in ['matrix']:
                             user_choice = [x for x  in question_details['answers'] if x['answer_id'] == answer['col']][0]
+                            answer_response = user_choice['position']
+                            #if 'confidence' in question_details['heading']:
+                            #    print 'Y:', question_details['subtype']
+                            #else:
+                            #    print 'N:', question_details['subtype']
+                            #    print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+                            #    print question_details
+                            #    print answer
+                            #    print user_choice
+                            #    print answer_varname
+                            #    print answer_response
                             #print user_choice
                             #print answer
-                            answer_response = user_choice['position']
                             #answer_response = db.answers.find_one({'answer_id':answer['col']})['position']
                         else:
                             user_choice = [x for x  in question_details['answers'] if x['answer_id'] == answer['row']][0]
@@ -118,7 +134,13 @@ def get_responses_dict(db, user_hash):
                                 raise AnswerTypeError
                      
                             #answer_response = db.answers.find_one({'answer_id':answer['row']})['position']
-                    responses_dict.update({answer_varname:str(answer_response)})
+                    #if 'CON' in answer_varname:
+                    #    print answer_varname, answer_response
+                    try:
+                        responses_dict.update({answer_varname:unicodedata.normalize('NFKD',answer_response).encode('ascii','ignore')})
+                    except TypeError:
+                        responses_dict.update({answer_varname:str(answer_response)})
+
  
     #print responses_dict
     return responses_dict
