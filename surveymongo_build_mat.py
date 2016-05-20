@@ -2,6 +2,7 @@
 use python 3.4
 """
 
+import unicodedata
 import requests
 import pandas
 import pymongo
@@ -66,6 +67,11 @@ def run(survey_name="", expName=""):
 	rd['mechanicalTurkCode']=UT_users[user]['mtcode']
         for key, value in UT_users[user]['vars'].iteritems():
             rd[key]=value
+        for key, value in rd.iteritems():
+            try:
+                rd[key]=unicodedata.normalize('NFKD',value).encode('ascii','ignore')
+            except TypeError:
+                pass
         mat = mat.append(rd, ignore_index=True)
 
     filename = SM_REPORT_PATH + survey_name + '_mat.csv'
