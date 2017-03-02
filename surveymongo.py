@@ -106,6 +106,7 @@ def get_responses_dict(db, user_hash):
                         if question_details['subtype'] == 'rating':
                             answer_varname = db.varnames.find_one({'answer_id':answer['col']})['varname']
                         else:
+                            #print "question_details = ", question_details, "; answer = ", answer
                             answer_varname = db.varnames.find_one({'answer_id':answer['row']})['varname']
 
                         if question_details['family'] in ['matrix']:

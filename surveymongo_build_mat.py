@@ -46,7 +46,7 @@ def run(survey_name="", expName=""):
     # what if this doesn't execute?
     try:
         #UT_users_json = requests.get('http://172.31.38.3/experiment/users/experiment/User%20Testing', timeout=5)
-        UT_users_json = requests.get('http://127.0.0.1:8000/experiment/experiment/users/experiment/' + expName, timeout=5)
+        UT_users_json = requests.get('http://127.0.0.1:8000/experiment/experiment/users/experiment/' + expName, timeout=60)
         UT_users = UT_users_json.json()
 	print "Start UT_users"
         print UT_users
